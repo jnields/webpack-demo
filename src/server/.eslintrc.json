@@ -1,0 +1,9 @@
+{
+  "env": {
+    "node": true,
+    "shared-node-browser": false
+  },
+  "rules": {
+    "import/no-nodejs-modules": "off"
+  }
+}

@@ -1,0 +1,12 @@
+.img {
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%, 0);
+}
+
+.hello {
+  top: 300px;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+}

@@ -1,0 +1,45 @@
+{
+  "root": true,
+  "extends": "airbnb",
+  "env": {
+    "es6": true,
+    "node": false,
+    "browser": false,
+    "shared-node-browser": true
+  },
+  "parser": "babel-eslint",
+  "settings": {
+    "import/ignore": [
+      "\\.(?!jsx?$)"
+    ]
+  },
+  "rules": {
+    "import/no-commonjs": "error",
+    "import/no-amd": "error",
+    "indent": [
+      "warn",
+      2,
+      {
+        "SwitchCase": 1,
+        "VariableDeclarator": 1,
+        "outerIIFEBody": 1,
+        "FunctionDeclaration": {
+          "parameters": 1,
+          "body": 1
+        },
+        "MemberExpression": 1,
+        "FunctionExpression": {
+          "parameters": 1,
+          "body": 1
+        },
+        "CallExpression": {
+          "arguments": 1
+        },
+        "ArrayExpression": 1,
+        "ObjectExpression": 1
+      }
+    ],
+    "max-len": "error",
+    "max-lines": "error"
+  }
+}
