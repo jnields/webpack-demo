@@ -1,6 +1,5 @@
 {
   "env": {
-    "browser": true,
-    "shared-node-browser": false
+    "browser": true
   }
 }

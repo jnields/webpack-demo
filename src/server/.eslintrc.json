@@ -1,7 +1,6 @@
 {
   "env": {
-    "node": true,
-    "shared-node-browser": false
+    "node": true
   },
   "rules": {
     "import/no-nodejs-modules": "off"
