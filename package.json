@@ -5,13 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build": "npm run build-client & npm run build-server & wait",
-    "build-client": "webpack --config webpack.config.client.prod.babel.js",
-    "build-client:dev": "webpack-dev-server --config webpack.config.client.dev.babel.js",
-    "build-server": "webpack --config webpack.config.server.prod.babel.js",
-    "build-server:dev": "webpack --config webpack.config.server.dev.babel.js",
-    "config": "node -r dotenv/config -e ''",
+    "build-client": "webpack --config webpack.config.client.babel.js",
+    "build-client:dev": "webpack-dev-server --config webpack.config.client.babel.js",
+    "build-server": "webpack --config webpack.config.server.babel.js",
+    "build-server:dev": "webpack --config webpack.config.server.babel.js",
+    "pretest": "npm run lint",
     "test": "BABEL_ENV=test nyc mocha -r babel-register",
-    "prewatch": "npm run config",
     "lint": "eslint --ignore-path .gitignore --ignore-pattern /build --ext .js --ext .jsx .",
     "watch": "npm run build-client:dev -- --watch & npm run build-server:dev -- --watch & nodemon -r dotenv/config --watch build/server.js build/server.js & wait"
   },
@@ -35,6 +34,7 @@
     "babel-core": "^6.26.0",
     "babel-eslint": "^7.2.3",
     "babel-loader": "^7.1.1",
+    "babel-minify-webpack-plugin": "^0.2.0",
     "babel-plugin-istanbul": "^4.1.4",
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "babel-plugin-syntax-jsx": "^6.18.0",
@@ -43,7 +43,6 @@
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
     "babel-register": "^6.26.0",
-    "babili-webpack-plugin": "^0.1.2",
     "chai": "^4.1.1",
     "css-loader": "^0.28.5",
     "cssnano": "^3.10.0",
@@ -82,7 +81,8 @@
     "react-redux": "^5.0.6",
     "react-router": "^4.2.0",
     "redux": "^3.7.2",
-    "redux-thunk": "^2.2.0"
+    "redux-thunk": "^2.2.0",
+    "uuid": "^3.1.0"
   },
   "babel": {
     "presets": [

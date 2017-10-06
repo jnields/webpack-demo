@@ -3,6 +3,7 @@ import { renderToString, renderToStaticMarkup } from 'react-dom/server';
 import { Helmet } from 'react-helmet';
 import { Provider } from 'react-redux';
 import { StaticRouter } from 'react-router';
+import uuid from 'uuid';
 import fs from 'fs';
 import Page from '../components/Page';
 import createStore from '../util/createStore';
@@ -12,12 +13,15 @@ import reducers from '../reducers';
 const manifest = JSON.parse(fs.readFileSync('./build/manifest.json'));
 const scripts = [
   'manifest.js',
-  'core1.js',
-  'core2.js',
+  '1.js',
+  '2.js',
   'main.js',
 ].map(src => <script key={src} src={manifest[src]} />);
 
-async function getInitialState(req, appRoot) {
+const appRoot = uuid();
+
+async function getInitialState(req) {
+  console.log(req);
   return {
     server: {
       appRoot,
@@ -26,18 +30,9 @@ async function getInitialState(req, appRoot) {
   };
 }
 
-function uuid() {
-  const result = [];
-  for (let i = 0; i < 26; i += 1) {
-    result.push(Math.floor(Math.random() * 32).toString(32));
-  }
-  return result.join('');
-}
-
 export default async function (req, res, next) {
   try {
     const history = {};
-    const appRoot = uuid();
     const initialState = await getInitialState(req, appRoot);
     const helmet = (
       <Helmet>
@@ -45,24 +40,22 @@ export default async function (req, res, next) {
         <html lang={initialState.server.lang} />
       </Helmet>
     );
-    let markup = '';
     const store = createStore(reducers, initialState, history);
     store.dispatch({ type: '__INIT_STATE__' });
-    markup = renderToString(
-      <Provider store={store}>
-        <StaticRouter context={history} location={req.url}>
-          <AppContainer>
-            {helmet}
-          </AppContainer>
-        </StaticRouter>
-      </Provider>,
-    );
     const html = renderToStaticMarkup(
       <Page
         {...{
-          helmet: Helmet.renderStatic(),
           appRoot,
-          markup,
+          markup: renderToString(
+            <Provider store={store}>
+              <StaticRouter context={history} location={req.url}>
+                <AppContainer>
+                  {helmet}
+                </AppContainer>
+              </StaticRouter>
+            </Provider>,
+          ),
+          helmet: Helmet.renderStatic(),
           initialState,
         }}
       />,
