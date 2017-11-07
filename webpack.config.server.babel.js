@@ -16,7 +16,7 @@ const prod = NODE_ENV === 'production';
 
 
 export default {
-  entry: ['babel-polyfill', './src/server'],
+  entry: './src/server',
   output: {
     path: path.resolve('./build'),
     filename: 'server.js',

@@ -1,5 +1,8 @@
 {
   "env": {
     "node": false
+  },
+  "rules": {
+    "import/no-nodejs-modules": "error"
   }
 }

@@ -1,16 +1,18 @@
-import Home from '../containers/HomeContainer';
-import About from '../containers/AboutContainer';
+// import Home from '../containers/HomeContainer';
+// import About from '../containers/AboutContainer';
 
 export default [
   {
-    path: '/',
-    component: Home,
-    exact: true,
-    // component: import('../containers/HomeContainer'),
+    props: {
+      path: '/',
+      // component: Home,
+      component: import('../containers/HomeContainer'),
+      exact: true,
+    },
   },
   {
     path: '/about',
-    component: About,
-    // component: import('../containers/AboutContainer'),
+    // component: About,
+    component: import('../containers/AboutContainer'),
   },
 ];

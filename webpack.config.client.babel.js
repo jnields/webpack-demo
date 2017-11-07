@@ -1,8 +1,8 @@
-import 'babel-polyfill';
 import BabelMinifyWebpackPlugin from 'babel-minify-webpack-plugin';
 import OptimizeCssAssetsWebpackPlugin from 'optimize-css-assets-webpack-plugin';
 import ExtractTextWebpackPlugin from 'extract-text-webpack-plugin';
 import WebpackManifestPlugin from 'webpack-manifest-plugin';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import path from 'path';
 import webpack from 'webpack';
 import autoprefixer from 'autoprefixer';
@@ -20,35 +20,42 @@ const postcss = {
   },
 };
 const prod = NODE_ENV === 'production';
-const filename = `[${prod ? 'chunkhash' : 'name'}].js`;
+const filename = `[name]${prod ? '-[chunkhash]' : ''}.js`;
 const publicPath = '/public/';
+
+function getChunkName(chunk) {
+  if (chunk.name) return chunk.name;
+  return chunk.mapModules((m) => {
+    const pathComponents = m.request.split('/');
+    return pathComponents[pathComponents.length - 1];
+  }).join('_');
+}
 
 export default {
   entry: {
     main: [
-      'babel-polyfill',
       'whatwg-fetch',
       './src/client',
     ],
-    1: [
-      'babel-polyfill',
-      'history',
-      'prop-types',
+    'core-1': [
+      'whatwg-fetch',
       'react',
-      'react-router',
-      'redux',
-    ],
-    2: [
-      'react-redux',
       'react-dom',
+      'redux',
       'redux-thunk',
+      'react-redux',
+    ],
+    'core-2': [
+      'prop-types',
+      'react-router',
       'react-helmet',
     ],
   },
   output: {
     path: outputPath,
-    filename,
     publicPath,
+    filename,
+    chunkFilename: '[chunkhash].js',
   },
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -100,23 +107,39 @@ export default {
       ]
       : [
         new webpack.HotModuleReplacementPlugin(),
-        new webpack.NamedModulesPlugin(),
       ]
     ),
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      reportFilename: path.resolve('./build/bundles.html'),
+      openAnalyzer: false,
+    }),
+    new webpack.NamedModulesPlugin(),
+    new webpack.NamedChunksPlugin(getChunkName),
     new webpack.optimize.CommonsChunkPlugin({
-      names: [2, 1],
+      names: ['core-2', 'core-1'],
+      filename,
+      minChunks: Infinity,
+    }),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'common',
       filename,
     }),
     new webpack.optimize.CommonsChunkPlugin({
-      name: 'manifest',
+      name: 'runtime',
       filename,
     }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
+      'module.hot': JSON.stringify(!prod),
     }),
     new WebpackManifestPlugin({
       publicPath,
       fileName: '../manifest.json',
+      map: obj => ({
+        ...obj,
+        name: getChunkName(obj.chunk),
+      }),
     }),
   ],
   devServer: {

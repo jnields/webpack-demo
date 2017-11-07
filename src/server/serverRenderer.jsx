@@ -3,6 +3,7 @@ import { renderToString, renderToStaticMarkup } from 'react-dom/server';
 import { Helmet } from 'react-helmet';
 import { Provider } from 'react-redux';
 import { StaticRouter } from 'react-router';
+import createMemoryHistory from 'history/createMemoryHistory';
 import uuid from 'uuid';
 import fs from 'fs';
 import Page from '../components/Page';
@@ -20,8 +21,7 @@ const scripts = [
 
 const appRoot = uuid();
 
-async function getInitialState(req) {
-  console.log(req);
+async function getInitialState() {
   return {
     server: {
       appRoot,
@@ -32,7 +32,7 @@ async function getInitialState(req) {
 
 export default async function (req, res, next) {
   try {
-    const history = {};
+    const history = createMemoryHistory();
     const initialState = await getInitialState(req, appRoot);
     const helmet = (
       <Helmet>
@@ -40,8 +40,13 @@ export default async function (req, res, next) {
         <html lang={initialState.server.lang} />
       </Helmet>
     );
-    const store = createStore(reducers, initialState, history);
-    store.dispatch({ type: '__INIT_STATE__' });
+    const store = await createStore({
+      reducers,
+      initialState,
+      history,
+      async: true,
+    });
+
     const html = renderToStaticMarkup(
       <Page
         {...{
