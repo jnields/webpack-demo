@@ -1,10 +1,11 @@
 import path from 'path';
+import webpack from 'webpack';
 import nodeExternals from 'webpack-node-externals';
 import BabelMinifyWebpackPlugin from 'babel-minify-webpack-plugin';
 import autoprefixer from 'autoprefixer';
 import { config } from 'dotenv';
 
-const { NODE_ENV } = config().parsed;
+const { NODE_ENV, MINIFY } = config().parsed;
 
 const postcss = {
   loader: 'postcss-loader',
@@ -32,10 +33,7 @@ export default {
         test: /\.jsx?$/,
         include: path.resolve('./src'),
         exclude: path.resolve('./node_modules'),
-        use: [
-          ...(prod ? [] : ['react-hot-loader']),
-          'babel-loader?forceEnv=server',
-        ],
+        use: 'babel-loader?forceEnv=server',
       },
       {
         test: /\.jpg$/,
@@ -54,13 +52,18 @@ export default {
       },
     ],
   },
-  plugins: prod
-    ? [
-      new BabelMinifyWebpackPlugin({
-        removeConsole: true,
-        removeDebugger: true,
-      }),
-    ]
-    : [],
+  plugins: [
+    ...((prod && MINIFY !== 'false')
+      ? [
+        new BabelMinifyWebpackPlugin({
+          removeDebugger: true,
+        }),
+      ]
+      : []
+    ),
+    new webpack.NamedModulesPlugin(),
+    new webpack.NamedChunksPlugin(),
+    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+  ],
   target: 'node',
 };

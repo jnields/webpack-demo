@@ -9,15 +9,35 @@ import fs from 'fs';
 import Page from '../components/Page';
 import createStore from '../util/createStore';
 import AppContainer from '../containers/AppContainer';
+import UniversalComponent from '../components/UniversalComponent';
 import reducers from '../reducers';
 
-const manifest = JSON.parse(fs.readFileSync('./build/manifest.json'));
-const scripts = [
-  'manifest.js',
-  '1.js',
-  '2.js',
-  'main.js',
-].map(src => <script key={src} src={manifest[src]} />);
+const webpackStats = JSON.parse(fs.readFileSync('./build/stats.json'));
+
+const {
+  entrypoints: { main },
+  publicPath,
+  assetsByChunkName,
+  modules,
+} = webpackStats;
+
+const clientModuleChunks = modules.reduce(
+  (result, m) => ({ ...result, [m.id]: m.chunks }),
+  {},
+);
+
+const getFilesByModuleId =
+  ms => ms
+    .reduce((chunks, id) => [...chunks, ...clientModuleChunks[id]], [])
+    .filter((chunk, ix, self) => self.indexOf(chunk) === ix) // unique
+    .map(chunk => publicPath + assetsByChunkName[chunk])
+    .map(src => <script src={src} key={src} />);
+
+
+const baseScripts = main
+  .assets
+  .map(src => <script src={publicPath + src} key={publicPath + src} />);
+
 
 const appRoot = uuid();
 
@@ -34,12 +54,6 @@ export default async function (req, res, next) {
   try {
     const history = createMemoryHistory();
     const initialState = await getInitialState(req, appRoot);
-    const helmet = (
-      <Helmet>
-        {scripts}
-        <html lang={initialState.server.lang} />
-      </Helmet>
-    );
     const store = await createStore({
       reducers,
       initialState,
@@ -47,20 +61,30 @@ export default async function (req, res, next) {
       async: true,
     });
 
+    const markup = renderToString(
+      <Provider store={store}>
+        <StaticRouter context={history} location={req.originalUrl}>
+          <AppContainer />
+        </StaticRouter>
+      </Provider>,
+    );
+
     const html = renderToStaticMarkup(
       <Page
         {...{
           appRoot,
-          markup: renderToString(
-            <Provider store={store}>
-              <StaticRouter context={history} location={req.url}>
-                <AppContainer>
-                  {helmet}
-                </AppContainer>
-              </StaticRouter>
-            </Provider>,
-          ),
-          helmet: Helmet.renderStatic(),
+          markup,
+          helmet: {
+            ...Helmet.renderStatic(),
+          },
+          scripts: (() => {
+            const asyncScripts = getFilesByModuleId(UniversalComponent.getModules());
+            const result = baseScripts.slice();
+            const last = result.pop();
+            [].push.apply(result, asyncScripts);
+            result.push(last);
+            return result;
+          })(),
           initialState,
         }}
       />,

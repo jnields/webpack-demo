@@ -1,12 +1,13 @@
 /* eslint-disable react/no-danger */
 import React from 'react';
-import { string, shape, func } from 'prop-types';
+import { arrayOf, node, string, shape, func } from 'prop-types';
 import stateShape from '../util/stateShape';
 
 export default function Page({
   initialState,
   markup,
   appRoot,
+  scripts,
   helmet: {
     base,
     bodyAttributes,
@@ -29,7 +30,7 @@ export default function Page({
         {style.toComponent()}
         {base.toComponent()}
       </head>
-      <body {...bodyAttributes}>
+      <body {...bodyAttributes.toComponent()}>
         {noscript.toComponent()}
         <div
           id={appRoot}
@@ -43,6 +44,7 @@ export default function Page({
             };`,
           }}
         />
+        {scripts}
         {script.toComponent()}
       </body>
     </html>
@@ -53,6 +55,7 @@ Page.propTypes = {
   appRoot: string.isRequired,
   markup: string.isRequired,
   initialState: stateShape.isRequired,
+  scripts: arrayOf(node).isRequired,
   helmet: shape({
     bodyAttributes: shape({
       toComponent: func.isRequired,

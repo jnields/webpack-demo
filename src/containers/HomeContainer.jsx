@@ -1,7 +1,13 @@
 import { connect } from 'react-redux';
-import Home from '../components/Home';
+import UniversalComponent from '../components/UniversalComponent';
+
+const moduleId = require.resolveWeak('../components/Home');
 
 export default connect(
-  state => state,
+  state => ({
+    ...state,
+    moduleId,
+    loadComponent: () => import('../components/Home' /* webpackChunkName: 'home' */),
+  }),
   null,
-)(Home);
+)(UniversalComponent);

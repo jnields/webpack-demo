@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build": "npm run build-client & npm run build-server & wait",
-    "build-client": "webpack --config webpack.config.client.babel.js",
+    "build-client": "webpack --json --config webpack.config.client.babel.js > build/stats.json",
     "build-client:dev": "webpack-dev-server --config webpack.config.client.babel.js",
-    "build-server": "webpack --config webpack.config.server.babel.js",
+    "build-server": "webpack --json --config webpack.config.server.babel.js > build/server-stats.json",
     "build-server:dev": "webpack --config webpack.config.server.babel.js",
     "beautify": "csscomb src/**/*.scss && npm run lint-script --fix",
+    "prepublishOnly": "npm run build",
     "pretest": "npm run lint",
     "test": "BABEL_ENV=test nyc mocha -r babel-register",
     "lint": "npm run lint-script && npm run lint-style",
@@ -49,7 +50,6 @@
     "css-loader": "^0.28.5",
     "csscomb": "^4.2.0",
     "cssnano": "^3.10.0",
-    "dotenv": "^4.0.0",
     "eslint": "^4.4.1",
     "eslint-config-airbnb": "^15.1.0",
     "eslint-loader": "^1.9.0",
@@ -60,6 +60,7 @@
     "file-loader": "^0.11.2",
     "glob": "^7.1.2",
     "mocha": "^3.5.0",
+    "name-all-modules-plugin": "^1.0.1",
     "node-sass": "^4.5.3",
     "nodemon": "^1.11.0",
     "null-loader": "^0.1.1",
@@ -78,14 +79,16 @@
   },
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.23.0",
+    "dotenv": "^4.0.0",
     "express": "^4.15.4",
     "history": "^4.7.2",
-    "prop-types": "^15.5.10",
-    "react": "^15.6.1",
-    "react-dom": "^15.6.1",
+    "prop-types": "^15.6.0",
+    "react": "^16.1.1",
+    "react-dom": "^16.1.1",
     "react-helmet": "^5.2.0",
     "react-redux": "^5.0.6",
     "react-router": "^4.2.0",
+    "react-router-dom": "^4.2.2",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
     "uuid": "^3.1.0"
@@ -93,7 +96,8 @@
   "babel": {
     "presets": [
       "react",
-      "stage-3", [
+      "stage-3",
+      [
         "env",
         {
           "targets": {

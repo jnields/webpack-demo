@@ -1,20 +1,11 @@
 import React from 'react';
-import { node } from 'prop-types';
-import { Route, Switch } from 'react-router';
+import { Switch, Route } from 'react-router';
 import routes from '../config/routes';
 
-export default function App({ children }) {
+export default function App() {
   return (
     <Switch>
-      {children}
-      {routes.map(route => <Route key={route.path} {...route} />)}
+      {routes.map(route => <Route {...route} />)}
     </Switch>
   );
 }
-App.propTypes = {
-  children: node,
-};
-
-App.defaultProps = {
-  children: undefined,
-};

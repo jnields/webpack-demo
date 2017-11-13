@@ -2,10 +2,14 @@
   "root": true,
   "extends": "airbnb",
   "env": {
+    "commonjs": true,
     "es6": true,
     "node": true,
     "browser": false,
     "shared-node-browser": true
+  },
+  "globals": {
+    "process": true
   },
   "parser": "babel-eslint",
   "settings": {

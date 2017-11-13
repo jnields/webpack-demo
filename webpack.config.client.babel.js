@@ -1,7 +1,7 @@
 import BabelMinifyWebpackPlugin from 'babel-minify-webpack-plugin';
 import OptimizeCssAssetsWebpackPlugin from 'optimize-css-assets-webpack-plugin';
 import ExtractTextWebpackPlugin from 'extract-text-webpack-plugin';
-import WebpackManifestPlugin from 'webpack-manifest-plugin';
+import NameAllModulesPlugin from 'name-all-modules-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import path from 'path';
 import webpack from 'webpack';
@@ -11,7 +11,7 @@ import { config } from 'dotenv';
 const outputPath = path.resolve('./build/public');
 const extractCss = new ExtractTextWebpackPlugin('[chunkhash].css', { allChunks: true });
 
-const { PORT, DEV_PORT, NODE_ENV } = config().parsed;
+const { PORT, DEV_PORT, NODE_ENV, MINIFY } = config().parsed;
 
 const postcss = {
   loader: 'postcss-loader',
@@ -25,10 +25,7 @@ const publicPath = '/public/';
 
 function getChunkName(chunk) {
   if (chunk.name) return chunk.name;
-  return chunk.mapModules((m) => {
-    const pathComponents = m.request.split('/');
-    return pathComponents[pathComponents.length - 1];
-  }).join('_');
+  throw new Error('cannot dynamically import an unnamed chunk');
 }
 
 export default {
@@ -55,7 +52,6 @@ export default {
     path: outputPath,
     publicPath,
     filename,
-    chunkFilename: '[chunkhash].js',
   },
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -98,24 +94,31 @@ export default {
   plugins: [
     ...(prod
       ? [
-        new BabelMinifyWebpackPlugin({
-          removeConsole: true,
-          removeDebugger: true,
-        }),
         extractCss,
-        new OptimizeCssAssetsWebpackPlugin(),
       ]
       : [
         new webpack.HotModuleReplacementPlugin(),
       ]
     ),
+    ...((prod && MINIFY !== 'false')
+      ? [
+        new BabelMinifyWebpackPlugin({
+          removeConsole: true,
+          removeDebugger: true,
+        }),
+        new OptimizeCssAssetsWebpackPlugin(),
+      ]
+      : []
+    ),
     new BundleAnalyzerPlugin({
       analyzerMode: 'static',
       reportFilename: path.resolve('./build/bundles.html'),
       openAnalyzer: false,
+      logLevel: 'silent',
     }),
     new webpack.NamedModulesPlugin(),
     new webpack.NamedChunksPlugin(getChunkName),
+    new NameAllModulesPlugin(),
     new webpack.optimize.CommonsChunkPlugin({
       names: ['core-2', 'core-1'],
       filename,
@@ -133,14 +136,6 @@ export default {
       'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
       'module.hot': JSON.stringify(!prod),
     }),
-    new WebpackManifestPlugin({
-      publicPath,
-      fileName: '../manifest.json',
-      map: obj => ({
-        ...obj,
-        name: getChunkName(obj.chunk),
-      }),
-    }),
   ],
   devServer: {
     hot: true,
@@ -149,7 +144,7 @@ export default {
     contentBase: outputPath,
     publicPath,
     proxy: {
-      '/': {
+      '**': {
         target: `http://localhost:${PORT}`,
         secure: false,
         bypass: req => (req.path.startsWith(publicPath) ? req.originalUrl : false),
